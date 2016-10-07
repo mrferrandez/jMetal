@@ -64,7 +64,13 @@ public class WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 	}
 
 	public AbstractUtilityFunctionsSet<S> createUtilityFunction() {
-		double [][] weights = WeightVector.initUniformWeights2D(0.005, getMaxPopulationSize());
+		double [][] weights;
+		if (referencePoint.size()==2)
+			weights = WeightVector.initUniformWeights2D(0.005, getMaxPopulationSize());
+		else{
+			String filePath=System.getProperty("user.dir")+"/weightsWASFGA/W3D_"+Integer.toString(getMaxPopulationSize())+".dat";
+			weights = WeightVector.getWeightsFromFile(filePath);
+		}
 		weights = WeightVector.invertWeights(weights,true);
 		ASFWASFGA<S> aux = new ASFWASFGA<>(weights,referencePoint);
 

@@ -206,6 +206,11 @@
                 </executions>
             </plugin>
 
+            <plugin>
+            	<groupId>comsol</groupId>
+            	<artifactId>comsol</artifactId>
+            	<version>1.0.0</version>
+            </plugin>
         </plugins>
     </build>
 

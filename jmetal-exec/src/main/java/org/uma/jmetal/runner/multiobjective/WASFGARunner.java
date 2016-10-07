@@ -53,21 +53,23 @@ public class WASFGARunner extends AbstractAlgorithmRunner {
     List<Double> referencePoint = null;
 
     String problemName ;
-    if (args.length == 1) {
-      problemName = args[0];
-    } else if (args.length == 2) {
-      problemName = args[0] ;
-      referenceParetoFront = args[1] ;
-    } else {
-      problemName = "org.uma.jmetal.problem.multiobjective.zdt.ZDT4";
-      referenceParetoFront = "jmetal-problem/src/test/resources/pareto_fronts/ZDT4.pf" ;
-    }
+//    if (args.length == 1) {
+//      problemName = args[0];
+//    } else if (args.length == 2) {
+//      problemName = args[0] ;
+//      referenceParetoFront = args[1] ;
+//    } else {
+//      problemName = "org.uma.jmetal.problem.multiobjective.zdt.ZDT4";
+//      referenceParetoFront = "jmetal-problem/src/test/resources/pareto_fronts/ZDT4.pf" ;
+//    }
 
+    problemName ="org.uma.jmetal.problem.multiobjective.BacVitTemp";
     problem = ProblemUtils.<DoubleSolution> loadProblem(problemName);
     
     referencePoint = new ArrayList<>();
     referencePoint.add(0.0);
     referencePoint.add(0.0);
+    referencePoint.add(30.0);
 
     double crossoverProbability = 0.9 ;
     double crossoverDistributionIndex = 20.0 ;
@@ -79,7 +81,7 @@ public class WASFGARunner extends AbstractAlgorithmRunner {
 
     selection = new BinaryTournamentSelection<DoubleSolution>(new RankingAndCrowdingDistanceComparator<DoubleSolution>());
 
-    algorithm = new WASFGA<DoubleSolution>(problem, 100, 250, crossover, mutation, selection,new SequentialSolutionListEvaluator<DoubleSolution>(),referencePoint) ;
+    algorithm = new WASFGA<DoubleSolution>(problem, 500, 30, crossover, mutation, selection,new SequentialSolutionListEvaluator<DoubleSolution>(),referencePoint) ;
 
     AlgorithmRunner algorithmRunner = new AlgorithmRunner.Executor(algorithm)
             .execute() ;
