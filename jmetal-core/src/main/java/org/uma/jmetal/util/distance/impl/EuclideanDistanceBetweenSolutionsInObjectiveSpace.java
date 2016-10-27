@@ -16,6 +16,9 @@ package org.uma.jmetal.util.distance.impl;
 import org.uma.jmetal.solution.Solution;
 import org.uma.jmetal.util.distance.Distance;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Class for calculating the Euclidean distance between two {@link Solution} objects in objective space.
  *
@@ -36,4 +39,17 @@ public class EuclideanDistanceBetweenSolutionsInObjectiveSpace<S extends Solutio
 
     return Math.sqrt(distance);
   }
+  
+  public double getDistance(List<Double> referencePoint, S solution2) {
+	  double diff;
+	  double distance = 0.0;
+	  for (int nObj = 0; nObj < referencePoint.size();nObj++){
+		  diff = referencePoint.get(nObj) - solution2.getObjective(nObj);
+		  distance += Math.pow(diff,2.0);
+	  }
+
+	  return Math.sqrt(distance);
+	  
+  }
+	  
 }

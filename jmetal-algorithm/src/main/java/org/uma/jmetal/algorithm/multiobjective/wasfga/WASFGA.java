@@ -13,6 +13,8 @@ import org.uma.jmetal.problem.Problem;
 import org.uma.jmetal.solution.Solution;
 import org.uma.jmetal.util.SolutionListUtils;
 import org.uma.jmetal.util.evaluator.SolutionListEvaluator;
+import org.uma.jmetal.util.fileoutput.SolutionListOutput;
+import org.uma.jmetal.util.fileoutput.impl.DefaultFileOutputContext;
 import org.uma.jmetal.util.solutionattribute.Ranking;
 
 import java.util.ArrayList;
@@ -39,7 +41,7 @@ public class WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 	protected int evaluations;
 	protected Normalizer normalizer;
 	
-	final AbstractUtilityFunctionsSet<S> achievementScalarizingFunction;
+	final ASFWASFGA<S> achievementScalarizingFunction;
 	List<Double> referencePoint = null;
 
 	/**
@@ -63,7 +65,7 @@ public class WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 		this.achievementScalarizingFunction =  createUtilityFunction();
 	}
 
-	public AbstractUtilityFunctionsSet<S> createUtilityFunction() {
+	public ASFWASFGA<S> createUtilityFunction() {
 		double [][] weights;
 		if (referencePoint.size()==2)
 			weights = WeightVector.initUniformWeights2D(0.005, getMaxPopulationSize());
@@ -83,8 +85,14 @@ public class WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 
 	@Override
 	public void specificMOEAComputations() {
+		initializeBounds(this.getProblem().getNumberOfObjectives());
 		updateNadirPoint(this.getPopulation());
 		updateReferencePoint(this.getPopulation());
+		new SolutionListOutput(this.getPopulation())
+	    .setSeparator("\t")
+	    .setVarFileOutputContext(new DefaultFileOutputContext("VAR_POP"+Integer.toString(iterations)+".tsv"))
+	    .setFunFileOutputContext(new DefaultFileOutputContext("FUN_POP"+Integer.toString(iterations)+".tsv"))
+	    .print();
 	}
 
 	@Override
@@ -97,6 +105,8 @@ public class WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 	}
 	
 	protected Ranking<S> computeRanking(List<S> solutionList) {
+		this.achievementScalarizingFunction.setNadir(getNadirPoint(solutionList));
+		this.achievementScalarizingFunction.setUtopia(getReferencePoint(solutionList));
 		Ranking<S> ranking = new WASFGARanking<>(this.achievementScalarizingFunction);
 		ranking.computeRanking(solutionList);
 		return ranking;
@@ -139,6 +149,10 @@ public class WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 	}
 	protected List<S> getNonDominatedSolutions(List<S> solutionList) {
 		return SolutionListUtils.getNondominatedSolutions(solutionList);
+	}
+	
+	public List<S> getAllPopulation() {
+		return getPopulation();
 	}
 
 	@Override public String getName() {

@@ -34,6 +34,8 @@ public class NonDominatedSolutionListArchive<S extends Solution<?>> implements A
   private List<S> solutionList;
   private Comparator<S> dominanceComparator;
   private Comparator<S> equalSolutions = new EqualSolutionsComparator<S>();
+  
+  private List<S> removedSolutions;
 
   /** Constructor */
   public NonDominatedSolutionListArchive() {
@@ -55,8 +57,10 @@ public class NonDominatedSolutionListArchive<S extends Solution<?>> implements A
    * dominated or if an identical individual exists.
    * The decision variables can be null if the solution is read from a file; in
    * that case, the domination tests are omitted
+   * MODIFIED: return TRUE if an identical individual exists.
    */
-  public boolean add(S solution) {
+
+public boolean add(S solution) {
     boolean solutionInserted = false ;
     if (solutionList.size() == 0) {
       solutionList.add(solution) ;
@@ -70,7 +74,9 @@ public class NonDominatedSolutionListArchive<S extends Solution<?>> implements A
         S listIndividual = iterator.next();
         int flag = dominanceComparator.compare(solution, listIndividual);
         if (flag == -1) {
+          removedSolutions.add(listIndividual);
           iterator.remove();
+          
         }  else if (flag == 1) {
           isDominated = true; // dominated by one in the list
         } else if (flag == 0) {
@@ -85,6 +91,12 @@ public class NonDominatedSolutionListArchive<S extends Solution<?>> implements A
     	  solutionList.add(solution);
     	  solutionInserted = true;
       }
+      
+      // MODIFIED
+      if (isContained) {
+    	  // If the solution is contained then it is already inserted. 
+    	  solutionInserted = true;
+      }// END MODIFIED
       
       return solutionInserted;
     }
@@ -103,5 +115,14 @@ public class NonDominatedSolutionListArchive<S extends Solution<?>> implements A
 
   @Override public S get(int index) {
     return solutionList.get(index);
+  }
+  
+  public List<S> getRemovedSolutions() {
+	  System.out.println("Number of removed solutions: "+ removedSolutions.size());
+	  return removedSolutions;
+  }
+  
+  public void initializeRemovedSolutions() {
+	  removedSolutions = new ArrayList<>() ;
   }
 }

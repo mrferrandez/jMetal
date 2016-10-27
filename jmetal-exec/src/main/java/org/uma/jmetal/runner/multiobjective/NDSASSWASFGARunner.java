@@ -14,11 +14,12 @@
 package org.uma.jmetal.runner.multiobjective;
 
 import org.uma.jmetal.algorithm.Algorithm;
-import org.uma.jmetal.algorithm.multiobjective.wasfga.WASFGA;
+import org.uma.jmetal.algorithm.multiobjective.wasfga.NDSASSWASFGA;
 import org.uma.jmetal.operator.CrossoverOperator;
 import org.uma.jmetal.operator.MutationOperator;
 import org.uma.jmetal.operator.SelectionOperator;
 import org.uma.jmetal.operator.impl.crossover.SBXCrossover;
+import org.uma.jmetal.operator.impl.localsearch.SASSLocalSearch;
 import org.uma.jmetal.operator.impl.mutation.PolynomialMutation;
 import org.uma.jmetal.operator.impl.selection.BinaryTournamentSelection;
 import org.uma.jmetal.problem.Problem;
@@ -37,7 +38,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WASFGARunner extends AbstractAlgorithmRunner {
+public class NDSASSWASFGARunner extends AbstractAlgorithmRunner {
   /**
    * @param args Command line arguments.
    * @throws JMetalException
@@ -72,6 +73,9 @@ public class WASFGARunner extends AbstractAlgorithmRunner {
     referencePoint.add(0.0);
     referencePoint.add(0.0);
     //referencePoint.add(30.0);
+    
+    int improvementRounds = 7;
+    SASSLocalSearch<DoubleSolution> localSearch = new SASSLocalSearch<DoubleSolution>(improvementRounds, problem);
 
     double crossoverProbability = 0.9 ;
     double crossoverDistributionIndex = 20.0 ;
@@ -83,14 +87,14 @@ public class WASFGARunner extends AbstractAlgorithmRunner {
 
     selection = new BinaryTournamentSelection<DoubleSolution>(new RankingAndCrowdingDistanceComparator<DoubleSolution>());
 
-    algorithm = new WASFGA<DoubleSolution>(problem, 30, 15, crossover, mutation, selection,new SequentialSolutionListEvaluator<DoubleSolution>(),referencePoint) ;
+    algorithm = new NDSASSWASFGA<DoubleSolution>(problem, 30, 10, localSearch, crossover, mutation, selection,new SequentialSolutionListEvaluator<DoubleSolution>(),referencePoint) ;
 
     AlgorithmRunner algorithmRunner = new AlgorithmRunner.Executor(algorithm)
             .execute() ;
 
     List<DoubleSolution> population = algorithm.getResult() ;
     long computingTime = algorithmRunner.getComputingTime() ;
-    List<DoubleSolution> allpopulation = ((WASFGA<DoubleSolution>) algorithm).getAllPopulation() ;
+    List<DoubleSolution> allpopulation = ((NDSASSWASFGA<DoubleSolution>) algorithm).getAllPopulation() ;
 
     JMetalLogger.logger.info("Total execution time: " + computingTime + "ms");
 

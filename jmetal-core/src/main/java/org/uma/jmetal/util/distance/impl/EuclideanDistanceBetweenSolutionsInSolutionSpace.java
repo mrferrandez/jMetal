@@ -37,4 +37,21 @@ public class EuclideanDistanceBetweenSolutionsInSolutionSpace<S extends Solution
 
     return Math.sqrt(distance);
   }
+  public double getNormalizedDistance(S solution1, S solution2) {
+	    double distance = 0.0;
+
+	    double diff, x1, x2, x1norm, x2norm, lowerBound, upperBound;
+	    for (int i = 0; i < solution1.getNumberOfVariables() ; i++){
+	    	x1 = solution1.getVariableValue(i);
+	    	x2 = solution2.getVariableValue(i);
+	    	lowerBound = ((DoubleSolution) solution1).getLowerBound(i);
+			upperBound = ((DoubleSolution) solution1).getUpperBound(i);
+	    	x1norm = (x1 - lowerBound)/(upperBound-lowerBound);
+	    	x2norm = (x2 - lowerBound)/(upperBound-lowerBound);
+	    	diff = x1norm - x2norm;
+	    	distance += Math.pow(diff,2.0);
+	    }
+
+	    return Math.sqrt(distance);
+	  }
 }
