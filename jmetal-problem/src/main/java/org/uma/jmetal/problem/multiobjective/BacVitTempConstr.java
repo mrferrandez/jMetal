@@ -18,23 +18,26 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
-* Class representing problem BacVit
+* Class representing problem BacVitTempConstr
 */
 @SuppressWarnings("serial")
-public class BacVit extends AbstractDoubleProblem {
+public class BacVitTempConstr extends AbstractDoubleProblem  implements ConstrainedProblem<DoubleSolution>{
 
 static String currentFolder = System.getProperty("user.dir");
+
+public OverallConstraintViolation<DoubleSolution> overallConstraintViolationDegree ;
+public NumberOfViolatedConstraints<DoubleSolution> numberOfViolatedConstraints ;
 
 /**
 * Constructor.
 * Creates a default instance of the LocationProblem.
 * @param solutionType The solution type must "Real" 
 */
-public BacVit (){
+public BacVitTempConstr (){
     setNumberOfVariables(10);
-    setNumberOfObjectives(2);
-    setNumberOfConstraints(0);
-    setName("BacVit");
+    setNumberOfObjectives(3);
+    setNumberOfConstraints(3);
+    setName("BacVitTempConstr");
 
     List<Double> lowerLimit = Arrays.asList(10.0, 10.0, 0.1, -250.0, -250.0, -250.0, -250.0, -250.0, -250.0, -250.0);
     List<Double> upperLimit = Arrays.asList(50.0, 50.0, 250.0, 250.0, 250.0, 250.0, 250.0, 250.0, 250.0, 250.0);
@@ -42,14 +45,17 @@ public BacVit (){
     setLowerLimit(lowerLimit);
     setUpperLimit(upperLimit);
     
-} // BacVit
+    overallConstraintViolationDegree = new OverallConstraintViolation<DoubleSolution>() ;
+    numberOfViolatedConstraints = new NumberOfViolatedConstraints<DoubleSolution>() ;
+    
+} // BacVitTempConstr
 
 
 /** Evaluate() method */
 @Override
 public void evaluate(DoubleSolution solution) {
 	double [] xv = new double[getNumberOfVariables()] ; // 10 decision variables
-	double [] f = new double[getNumberOfObjectives()] ; // 2 objectives
+	double [] f = new double[getNumberOfObjectives()] ; // 3 objectives
 
 	for (int var = 0; var < xv.length; var++){
 		xv[var] = solution.getVariableValue(var);
@@ -72,22 +78,46 @@ public void evaluate(DoubleSolution solution) {
 
 	// First objective
 	f[0] = Bac;
-	//f[0] = (1-Vit);
-			
+
 	// Second objective
 	f[1] = (1-Vit);// + 1.e9*Math.max(Tmax-50.0,0.0); 
-	//f[1] = Tmax;
 	
 	// Third objective
-	//f[2] = Tmax;
+	f[2] = Tmax;
 
 	solution.setObjective(0,f[0]);
 	solution.setObjective(1,f[1]);
-//	solution.setObjective(2,f[2]);
+	solution.setObjective(2,f[2]);
 	ModelUtil.disconnect();
 	return ;
 
 } // evaluate
+
+/** EvaluateConstraints() method */
+@Override
+public void evaluateConstraints(DoubleSolution solution)  {
+  double[] constraint = new double[this.getNumberOfConstraints()];
+
+  double y1 = solution.getObjective(0) ;
+  double y2 = solution.getObjective(1) ;
+  double y3 = solution.getObjective(2) ;
+      
+  constraint[0] =  (0.3 - y1)/0.3 ;
+  constraint[1] =  (0.04 - y2)/0.04;
+  constraint[2] =  (50.0 - y3)/50.0;
+      
+  double overallConstraintViolation = 0.0;
+  int violatedConstraints = 0;
+  for (int i = 0; i < this.getNumberOfConstraints(); i++)
+    if (constraint[i]<0.0){
+      overallConstraintViolation+=constraint[i];
+      violatedConstraints++;
+    }
+
+  overallConstraintViolationDegree.setAttribute(solution, overallConstraintViolation);
+  numberOfViolatedConstraints.setAttribute(solution, violatedConstraints);
+}
+
 
 public static String[] tempini(double[] xv) {
 	String[] xvt={Double.toString(xv[0]), Double.toString(xv[1])};
@@ -155,11 +185,11 @@ public static double[] run(String[] xvt, String[][] x) {//double,
 	
 	Model model;
 	try {
-		model = ModelUtil.loadCopy("root", "Model");//_mesh6
+		model = ModelUtil.loadCopy("root", "Model");
 	} catch (IOException e) {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
-		model = ModelUtil.create("Model");//_mesh6
+		model = ModelUtil.create("Model");
 	}
 	
 	model.param().set("Trefrig", xvt[1]);

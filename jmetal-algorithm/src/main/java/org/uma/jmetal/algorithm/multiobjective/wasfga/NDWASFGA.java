@@ -41,7 +41,6 @@ import java.util.List;
  *         DOI = {10.1007/s10898-014-0214-y}
  *         
  *         Modified version of WASFGA called Non-Dominated WASFGA 
- * 		   Local Search Operator SASS included instead of Mutation and Crossover Operators
  * @author Miriam R. Ferrandez 
  *         Juana L. Redondo
  *         

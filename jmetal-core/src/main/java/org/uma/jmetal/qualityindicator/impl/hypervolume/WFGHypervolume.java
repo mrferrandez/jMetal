@@ -147,6 +147,13 @@ public class WFGHypervolume<S extends Solution<?>> extends Hypervolume<S> {
         }
       }
     }
+    
+    if (referencePoint == null) {
+        referencePoint = new ArrayPoint(numberOfObjectives) ;
+        for (int i = 0; i < numberOfObjectives ; i++) {
+          referencePoint.setDimensionValue(i, Double.MAX_VALUE);
+        }
+      }
 
     for (int i = 0; i < referencePoint.getNumberOfDimensions(); i++) {
       referencePoint.setDimensionValue(i, maxObjectives[i] + offset);

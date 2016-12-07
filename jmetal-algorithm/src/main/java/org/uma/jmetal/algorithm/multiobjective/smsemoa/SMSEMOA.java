@@ -20,6 +20,8 @@ import org.uma.jmetal.operator.SelectionOperator;
 import org.uma.jmetal.problem.Problem;
 import org.uma.jmetal.qualityindicator.impl.Hypervolume;
 import org.uma.jmetal.solution.Solution;
+import org.uma.jmetal.util.fileoutput.SolutionListOutput;
+import org.uma.jmetal.util.fileoutput.impl.DefaultFileOutputContext;
 import org.uma.jmetal.util.solutionattribute.Ranking;
 import org.uma.jmetal.util.solutionattribute.impl.DominanceRanking;
 
@@ -103,25 +105,71 @@ public class SMSEMOA<S extends Solution<?>> extends AbstractGeneticAlgorithm<S, 
 
   @Override protected List<S> replacement(List<S> population, List<S> offspringPopulation) {
     List<S> jointPopulation = new ArrayList<>();
-    jointPopulation.addAll(population);
-    jointPopulation.addAll(offspringPopulation);
-
-    Ranking<S> ranking = computeRanking(jointPopulation);
-    List<S> lastSubfront = ranking.getSubfront(ranking.getNumberOfSubfronts()-1) ;
-
-    lastSubfront = hypervolume.computeHypervolumeContribution(lastSubfront, jointPopulation) ;
-
+    double aux;
+//    if (evaluations < maxEvaluations/2){
+//    	jointPopulation.addAll(population);
+//    	jointPopulation.addAll(offspringPopulation);
+//    }
+//    else{
+    	double[] min = {0.0, 0.0};//, 10.0
+    	double[] max = {0.3, 0.04};//, 55.0
+    	for (int i =0; i < population.size(); i++){
+    		boolean isIntoROI = true;
+    		for (int nobj=0; nobj < population.get(0).getNumberOfObjectives()-1; nobj++){
+    			aux = population.get(i).getObjective(nobj);
+    			if ((aux < min[nobj])||(aux > max[nobj])){
+    				isIntoROI = false;
+    			}
+    		}
+    		if (isIntoROI){
+    			jointPopulation.add(population.get(i));
+    		}
+    	}
+    	//jointPopulation.addAll(population);
+    	for (int i =0; i < offspringPopulation.size(); i++){
+    		boolean isIntoROI = true;
+    		for (int nobj=0; nobj < offspringPopulation.get(0).getNumberOfObjectives()-1; nobj++){
+    			aux = offspringPopulation.get(i).getObjective(nobj);
+    			if ((aux < min[nobj])||(aux > max[nobj])){
+    				isIntoROI = false;
+    			}
+    		}
+    		if (isIntoROI){
+    			jointPopulation.add(offspringPopulation.get(i));
+    		}
+    	}
+    	//jointPopulation.addAll(offspringPopulation);
+//    }
     List<S> resultPopulation = new ArrayList<>() ;
-    for (int i = 0; i < ranking.getNumberOfSubfronts()-1; i++) {
-      for (S solution : ranking.getSubfront(i)) {
-        resultPopulation.add(solution);
-      }
-    }
+    if (jointPopulation.size() > this.getMaxPopulationSize()){
+    	Ranking<S> ranking = computeRanking(jointPopulation);
+    	List<S> lastSubfront = ranking.getSubfront(ranking.getNumberOfSubfronts()-1) ;
 
-    for (int i = 0; i < lastSubfront.size()-1; i++) {
-      resultPopulation.add(lastSubfront.get(i)) ;
-    }
+    	lastSubfront = hypervolume.computeHypervolumeContribution(lastSubfront, jointPopulation) ;
 
+    	System.out.println("Dentro del IF: Va a eliminar un individuo de la población");
+    	System.out.println(evaluations);
+    	for (int i = 0; i < ranking.getNumberOfSubfronts()-1; i++) {
+    		for (S solution : ranking.getSubfront(i)) {
+    			resultPopulation.add(solution);
+    		}
+    	}
+
+    	for (int i = 0; i < lastSubfront.size()-1; i++) {
+    		resultPopulation.add(lastSubfront.get(i)) ;
+    	}
+    }
+    else{
+    	resultPopulation = jointPopulation;
+    }
+    if (evaluations%1000==0){
+		new SolutionListOutput(resultPopulation)
+		.setSeparator("\t")
+		.setVarFileOutputContext(new DefaultFileOutputContext("VAR_POP"+Integer.toString(evaluations)+".tsv"))
+		.setFunFileOutputContext(new DefaultFileOutputContext("FUN_POP"+Integer.toString(evaluations)+".tsv"))
+		.print();
+	}
+    	
     return resultPopulation ;
   }
 

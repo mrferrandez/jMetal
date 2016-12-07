@@ -14,7 +14,7 @@
 package org.uma.jmetal.runner.multiobjective;
 
 import org.uma.jmetal.algorithm.Algorithm;
-import org.uma.jmetal.algorithm.multiobjective.wasfga.WASFGA;
+import org.uma.jmetal.algorithm.multiobjective.wasfga.WASFGAConstr;
 import org.uma.jmetal.operator.CrossoverOperator;
 import org.uma.jmetal.operator.MutationOperator;
 import org.uma.jmetal.operator.SelectionOperator;
@@ -37,7 +37,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WASFGARunner extends AbstractAlgorithmRunner {
+public class WASFGARunnerConstr extends AbstractAlgorithmRunner {
   /**
    * @param args Command line arguments.
    * @throws JMetalException
@@ -65,7 +65,7 @@ public class WASFGARunner extends AbstractAlgorithmRunner {
 //      referenceParetoFront = "jmetal-problem/src/test/resources/pareto_fronts/ZDT4.pf" ;
 //    }
 
-    problemName ="org.uma.jmetal.problem.multiobjective.BacVit";
+    problemName ="org.uma.jmetal.problem.multiobjective.BacVitTempConstr";
     problem = ProblemUtils.<DoubleSolution> loadProblem(problemName);
     
     referencePoint = new ArrayList<>();
@@ -83,14 +83,14 @@ public class WASFGARunner extends AbstractAlgorithmRunner {
 
     selection = new BinaryTournamentSelection<DoubleSolution>(new RankingAndCrowdingDistanceComparator<DoubleSolution>());
 
-    algorithm = new WASFGA<DoubleSolution>(problem, 100, 100, crossover, mutation, selection,new SequentialSolutionListEvaluator<DoubleSolution>(),referencePoint) ;
+    algorithm = new WASFGAConstr<DoubleSolution>(problem, 200, 300, crossover, mutation, selection,new SequentialSolutionListEvaluator<DoubleSolution>(),referencePoint) ;
 
     AlgorithmRunner algorithmRunner = new AlgorithmRunner.Executor(algorithm)
             .execute() ;
 
     List<DoubleSolution> population = algorithm.getResult() ;
     long computingTime = algorithmRunner.getComputingTime() ;
-    List<DoubleSolution> allpopulation = ((WASFGA<DoubleSolution>) algorithm).getAllPopulation() ;
+    List<DoubleSolution> allpopulation = ((WASFGAConstr<DoubleSolution>) algorithm).getAllPopulation() ;
 
     JMetalLogger.logger.info("Total execution time: " + computingTime + "ms");
 

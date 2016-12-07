@@ -93,7 +93,7 @@ public class SASSLocalSearch<S extends Solution<?>> implements LocalSearchOperat
 		int rounds = improvementRounds; // icmax
 		
 		DoubleSolution yold = (DoubleSolution) solution.copy();
-		problem.evaluate((S)yold);
+		//problem.evaluate((S)yold);
 		DoubleSolution ynew = (DoubleSolution) solution.copy();
 		
 		// sigmaub : normalized radius of the original individual
@@ -111,31 +111,31 @@ public class SASSLocalSearch<S extends Solution<?>> implements LocalSearchOperat
 			System.out.println("SASS Iteration: "+ic);
 			if (scnt > Scnt){
 				sigma = ex*sigma;
-				System.out.println(scnt+" mayor que "+Scnt);
-				System.out.println("Sigma= "+sigma);
+				////System.out.println(scnt+" mayor que "+Scnt);
+				////System.out.println("Sigma= "+sigma);
 			}
 			if (fcnt > Fcnt){
 					sigma = ct*sigma;
-					System.out.println(fcnt+" mayor que "+Fcnt);
-					System.out.println("Sigma= "+sigma);
+					////System.out.println(fcnt+" mayor que "+Fcnt);
+					////System.out.println("Sigma= "+sigma);
 			}
 			if (sigma < sigmalb){
 				sigma = sigmaub;
 				for (int i = 0; i < nvar; i++){
 					b[i] = 0.0;
 				}
-				System.out.println("Sigma menor que "+sigmalb);
+				////System.out.println("Sigma menor que "+sigmalb);
 			}
 			if (sigma > sigmaub){
 				sigma = sigmaub;
-				System.out.println("Sigma mayor que "+sigmalb);
+				////System.out.println("Sigma mayor que "+sigmalb);
 			}
 			
-			System.out.println("Valor f obj: "+ yold.getObjective(0)+" "+yold.getObjective(1));
+			////System.out.println("Valor f obj: "+ yold.getObjective(0)+" "+yold.getObjective(1));
 			// Generate a multivariate Gaussian random vector
 			for (int i = 0; i < nvar; i++){
 				gaussrnd = extpsrnd.randNormal(b[i], sigma);
-				System.out.println("Gaussian random vector "+gaussrnd);
+				////System.out.println("Gaussian random vector "+gaussrnd);
 			//}	
 				if (gaussrnd > sigmaub){
 					gaussrnd = sigmaub;
@@ -146,7 +146,7 @@ public class SASSLocalSearch<S extends Solution<?>> implements LocalSearchOperat
 				lowerBound = yold.getLowerBound(i);
 				upperBound = yold.getUpperBound(i);
 				zaux[i] = gaussrnd * (upperBound - lowerBound); //RAD NORMALIZADO
-				System.out.println("Gaussian random vector "+zaux[i]);
+				////System.out.println("Gaussian random vector "+zaux[i]);
 				//ynorm = (yold.getVariableValue(i) - lowerBound)/(upperBound - lowerBound);
 				//ynorm = ynorm + gaussrnd;
 				//ydesnorm = lowerBound + (upperBound - lowerBound)*ynorm;
@@ -158,13 +158,13 @@ public class SASSLocalSearch<S extends Solution<?>> implements LocalSearchOperat
 				//System.out.println("ynew sum"+ynew.getVariableValue(i));
 			}
 			problem.evaluate((S)ynew);
-			System.out.println("Nuevo valor f obj: "+ ynew.getObjective(0)+" "+ynew.getObjective(1));
+			////System.out.println("Nuevo valor f obj: "+ ynew.getObjective(0)+" "+ynew.getObjective(1));
 			evaluations ++;
 			best = dominanceComparator.compare((S)ynew, (S)yold);
 			if (best == -1){ // ynew dominates yold
 				scnt ++;
 				fcnt = 0;
-				System.out.println("ynew dominates yold");
+				////System.out.println("ynew dominates yold");
 				yold = (DoubleSolution) ynew.copy();
 			}
 			else{
@@ -176,7 +176,7 @@ public class SASSLocalSearch<S extends Solution<?>> implements LocalSearchOperat
 					for (int i = 0; i < nvar; i++){
 						b[i] = 0.4*zaux[i] + 0.2*b[i];
 					}
-					System.out.println("ynew added to nondominated external list");
+					////System.out.println("ynew added to nondominated external list");
 				}
 				else{
 					for (int i = 0; i < nvar; i++){
@@ -187,13 +187,13 @@ public class SASSLocalSearch<S extends Solution<?>> implements LocalSearchOperat
 						//System.out.println("ynew resta"+ynew.getVariableValue(i));
 					}
 					problem.evaluate((S)ynew);
-					System.out.println("Nuevo valor resta f obj: "+ ynew.getObjective(0)+" "+ynew.getObjective(1));
+					////System.out.println("Nuevo valor resta f obj: "+ ynew.getObjective(0)+" "+ynew.getObjective(1));
 					evaluations ++;
 					best = dominanceComparator.compare((S)ynew, (S)yold);
 					if (best == -1){ // ynew dominates yold
 						scnt ++;
 						fcnt = 0;
-						System.out.println("ynew dominates yold resta");
+						////System.out.println("ynew dominates yold resta");
 						yold = (DoubleSolution) ynew.copy();
 					}
 					else{
@@ -205,7 +205,7 @@ public class SASSLocalSearch<S extends Solution<?>> implements LocalSearchOperat
 							for (int i = 0; i < nvar; i++){
 								b[i] = b[i] - 0.4*zaux[i];
 							}
-							System.out.println("ynew added to nondominated external list resta");
+							////System.out.println("ynew added to nondominated external list resta");
 						}
 						else{
 							for (int i = 0; i < nvar; i++){
@@ -213,7 +213,7 @@ public class SASSLocalSearch<S extends Solution<?>> implements LocalSearchOperat
 							}
 							fcnt ++;
 							scnt = 0;
-							System.out.println("fcnt ++; fcnt = "+fcnt);
+							////System.out.println("fcnt ++; fcnt = "+fcnt);
 						}
 					}
 				}
