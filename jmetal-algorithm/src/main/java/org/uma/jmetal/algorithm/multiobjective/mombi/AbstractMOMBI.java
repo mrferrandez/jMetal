@@ -66,6 +66,7 @@ public abstract class AbstractMOMBI<S extends Solution<?>> extends AbstractGenet
 	@Override
 	protected void updateProgress() {
 		this.iterations+=1;
+//		System.out.println(iterations);
 	}
 
 	@Override
@@ -143,7 +144,12 @@ public abstract class AbstractMOMBI<S extends Solution<?>> extends AbstractGenet
 	}
 
 	public abstract void specificMOEAComputations();
-
+	
+	@Override
+	public int getIterations() {
+		return this.iterations;
+	}
+	
 	public List<Double> getReferencePoint() {
 		return this.referencePoint;
 	}
@@ -164,13 +170,25 @@ public abstract class AbstractMOMBI<S extends Solution<?>> extends AbstractGenet
 
 
 	private void initializeReferencePoint(int size) {
-		for (int i = 0; i < size; i++)
-			this.getReferencePoint().add(Double.POSITIVE_INFINITY);
+		for (int i = 0; i < size; i++){
+			if (this.getReferencePoint().size()<size){
+				this.getReferencePoint().add(Double.POSITIVE_INFINITY);
+			}
+			else{
+				this.getReferencePoint().set(i,Double.POSITIVE_INFINITY);
+			}
+		}
 	}
 
 	private void initializeNadirPoint(int size) {
-		for (int i = 0; i < size; i++)
-			this.getNadirPoint().add(Double.NEGATIVE_INFINITY);
+		for (int i = 0; i < size; i++){
+			if (this.getNadirPoint().size()<size){
+				this.getNadirPoint().add(Double.NEGATIVE_INFINITY);
+			}
+			else{
+				this.getNadirPoint().set(i,Double.NEGATIVE_INFINITY);
+			}
+		}
 	}
 	
 	public void initializeBounds(int size) {

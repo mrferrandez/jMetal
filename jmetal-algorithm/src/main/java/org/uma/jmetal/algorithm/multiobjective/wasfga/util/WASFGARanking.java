@@ -23,8 +23,13 @@ public class WASFGARanking<S extends Solution<?>> extends GenericSolutionAttribu
 
   @Override
   public Ranking<S> computeRanking(List<S> population) {
-
-	this.numberOfRanks 		= (population.size() + 1) / this.utilityFunctions.getSize();	
+	if (this.utilityFunctions.getSize()==1){
+		this.numberOfRanks 		= population.size() / this.utilityFunctions.getSize();
+	}
+	else{
+		this.numberOfRanks 		= (population.size() + 1) / this.utilityFunctions.getSize();
+	}
+		
 	this.rankedSubpopulations = new ArrayList<>(this.numberOfRanks);
 	for (int i = 0; i < this.numberOfRanks; i++) {
 		this.rankedSubpopulations.add(new ArrayList<S>());
@@ -35,6 +40,7 @@ public class WASFGARanking<S extends Solution<?>> extends GenericSolutionAttribu
 	
 	for (int idx = 0; idx < this.numberOfRanks; idx++) {
 		for (int weigth = 0; weigth < this.utilityFunctions.getSize(); weigth++) {
+			if (temporalList.size()!=0){
 			int toRemoveIdx = 0;
 			double minimumValue = this.utilityFunctions.evaluate(temporalList.get(0), weigth);			
 			for (int solutionIdx = 1; solutionIdx < temporalList.size(); solutionIdx++) {
@@ -49,6 +55,7 @@ public class WASFGARanking<S extends Solution<?>> extends GenericSolutionAttribu
 			S solutionToInsert = temporalList.remove(toRemoveIdx);
 			setAttribute(solutionToInsert, idx);
 			this.rankedSubpopulations.get(idx).add(solutionToInsert);
+			}
 		}
 	}
 	return this;

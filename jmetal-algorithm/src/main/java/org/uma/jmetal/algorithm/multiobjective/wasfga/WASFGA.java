@@ -12,6 +12,8 @@ import org.uma.jmetal.operator.SelectionOperator;
 import org.uma.jmetal.problem.Problem;
 import org.uma.jmetal.solution.Solution;
 import org.uma.jmetal.util.SolutionListUtils;
+import org.uma.jmetal.util.distance.impl.EuclideanDistanceBetweenSolutionsInObjectiveSpace;
+import org.uma.jmetal.util.distance.impl.HausdorffDistanceBetweenSetsInObjectiveSpace;
 import org.uma.jmetal.util.evaluator.SolutionListEvaluator;
 import org.uma.jmetal.util.fileoutput.SolutionListOutput;
 import org.uma.jmetal.util.fileoutput.impl.DefaultFileOutputContext;
@@ -38,11 +40,16 @@ public class WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 	 */
 	private static final long serialVersionUID = 1L;
 	protected int maxEvaluations;
-	protected int evaluations;
+	protected int evaluations=0;
 	protected Normalizer normalizer;
 	
 	final ASFWASFGA<S> achievementScalarizingFunction;
 	List<Double> referencePoint = null;
+	
+	protected EuclideanDistanceBetweenSolutionsInObjectiveSpace<S> distance ;
+	protected HausdorffDistanceBetweenSetsInObjectiveSpace<S,List<S>> hausdorff;
+	protected double[] consecutiveHausdorff = {Double.MAX_VALUE, Double.MAX_VALUE};
+	protected double tol = 1.0E-5;
 
 	/**
 	 * Constructor
@@ -63,6 +70,10 @@ public class WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 		setMaxPopulationSize(populationSize);
 		this.referencePoint 				= referencePoint;
 		this.achievementScalarizingFunction =  createUtilityFunction();
+		this.maxEvaluations = maxIterations;
+		
+		distance = new EuclideanDistanceBetweenSolutionsInObjectiveSpace<S>() ;
+		hausdorff = new HausdorffDistanceBetweenSetsInObjectiveSpace<S, List<S>>(distance);
 	}
 
 	public ASFWASFGA<S> createUtilityFunction() {
@@ -82,12 +93,27 @@ public class WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 	public int getPopulationSize() {
 		return getMaxPopulationSize();
 	}
+	
+	@Override
+	protected boolean isStoppingConditionReached() {
+		boolean stop = false;
+		if (this.iterations >= this.maxEvaluations){
+			stop = true;
+		} else{
+			if ((consecutiveHausdorff[0]<tol)&&(consecutiveHausdorff[1]<tol)){
+				stop = true;
+			}
+		}
+		
+		return stop;
+	}
 
 	@Override
 	public void specificMOEAComputations() {
 		initializeBounds(this.getProblem().getNumberOfObjectives());
 		updateNadirPoint(this.getPopulation());
 		updateReferencePoint(this.getPopulation());
+		this.evaluations += this.getPopulationSize();
 //		new SolutionListOutput(this.getPopulation())
 //	    .setSeparator("\t")
 //	    .setVarFileOutputContext(new DefaultFileOutputContext("VAR_POP"+Integer.toString(iterations)+".tsv"))
@@ -101,7 +127,10 @@ public class WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 		jointPopulation.addAll(population);
 		jointPopulation.addAll(offspringPopulation);
 		Ranking<S> ranking = computeRanking(jointPopulation);
-		return selectBest(ranking);
+		List<S> newPopulation = selectBest(ranking);
+		consecutiveHausdorff[0] = consecutiveHausdorff[1];
+		consecutiveHausdorff[1] = hausdorff.getDistance(population, newPopulation);
+		return newPopulation;
 	}
 	
 	protected Ranking<S> computeRanking(List<S> solutionList) {
@@ -144,11 +173,17 @@ public class WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 		return this.achievementScalarizingFunction;
 	}
 	
-	@Override public List<S> getResult() {
+	@Override 
+	public List<S> getResult() {
 		return getNonDominatedSolutions(getPopulation());
 	}
 	protected List<S> getNonDominatedSolutions(List<S> solutionList) {
 		return SolutionListUtils.getNondominatedSolutions(solutionList);
+	}
+	@Override
+	public int getEvaluationsConsumed(){
+		System.out.println("Number of EVAL "+ evaluations);
+		return this.evaluations;
 	}
 	
 	public List<S> getAllPopulation() {

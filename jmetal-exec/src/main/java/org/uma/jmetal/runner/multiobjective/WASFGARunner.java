@@ -65,25 +65,25 @@ public class WASFGARunner extends AbstractAlgorithmRunner {
 //      referenceParetoFront = "jmetal-problem/src/test/resources/pareto_fronts/ZDT4.pf" ;
 //    }
 
-    problemName ="org.uma.jmetal.problem.multiobjective.BacVit";
+    problemName ="org.uma.jmetal.problem.multiobjective.BacVitTemp";
     problem = ProblemUtils.<DoubleSolution> loadProblem(problemName);
     
     referencePoint = new ArrayList<>();
     referencePoint.add(0.0);
-    //referencePoint.add(0.0);
+    referencePoint.add(0.0);
     referencePoint.add(30.0);
 
     double crossoverProbability = 0.9 ;
     double crossoverDistributionIndex = 20.0 ;
     crossover = new SBXCrossover(crossoverProbability, crossoverDistributionIndex) ;
 
-    double mutationProbability = 1.0 / problem.getNumberOfVariables() ; //0.5
+    double mutationProbability = 1.0 / problem.getNumberOfVariables(); //0.5 
     double mutationDistributionIndex = 20.0 ;
     mutation = new PolynomialMutation(mutationProbability, mutationDistributionIndex) ;
 
     selection = new BinaryTournamentSelection<DoubleSolution>(new RankingAndCrowdingDistanceComparator<DoubleSolution>());
 
-    algorithm = new WASFGA<DoubleSolution>(problem, 100, 100, crossover, mutation, selection,new SequentialSolutionListEvaluator<DoubleSolution>(),referencePoint) ;
+    algorithm = new WASFGA<DoubleSolution>(problem, 20, 20, crossover, mutation, selection,new SequentialSolutionListEvaluator<DoubleSolution>(),referencePoint) ;
 
     AlgorithmRunner algorithmRunner = new AlgorithmRunner.Executor(algorithm)
             .execute() ;

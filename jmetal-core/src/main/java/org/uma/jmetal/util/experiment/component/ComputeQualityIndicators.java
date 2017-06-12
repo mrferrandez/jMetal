@@ -30,7 +30,9 @@ import org.uma.jmetal.util.front.util.FrontNormalizer;
 import org.uma.jmetal.util.front.util.FrontUtils;
 import org.uma.jmetal.util.point.util.PointSolution;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -77,7 +79,10 @@ public class ComputeQualityIndicators<S extends Solution<?>, Result> implements 
 
           JMetalLogger.logger.info("RF: " + referenceFrontName); ;
           Front referenceFront = new ArrayFront(referenceFrontName) ;
-
+          if (experiment.getReferencePoint()!=null){
+        	  referenceFront = filterROI(referenceFront);
+          }
+          
           FrontNormalizer frontNormalizer = new FrontNormalizer(referenceFront) ;
           Front normalizedReferenceFront = frontNormalizer.normalize(referenceFront) ;
 
@@ -90,6 +95,9 @@ public class ComputeQualityIndicators<S extends Solution<?>, Result> implements 
                 experiment.getOutputParetoFrontFileName() + i + ".tsv";
 
             Front front = new ArrayFront(frontFileName) ;
+            if (experiment.getReferencePoint()!=null){
+          	  front = filterROI(front);
+            }
             Front normalizedFront = frontNormalizer.normalize(front) ;
             List<PointSolution> normalizedPopulation = FrontUtils.convertFrontToSolutionList(normalizedFront) ;
             Double indicatorValue = (Double)indicator.evaluate((List<S>) normalizedPopulation) ;
@@ -101,6 +109,8 @@ public class ComputeQualityIndicators<S extends Solution<?>, Result> implements 
       }
     }
     findBestIndicatorFronts(experiment) ;
+    findBestIterationsFronts(experiment);
+    findBestEvalFronts(experiment);
   }
 
   private void writeQualityIndicatorValueToFile(Double indicatorValue, String qualityIndicatorFile) {
@@ -222,5 +232,205 @@ public class ComputeQualityIndicators<S extends Solution<?>, Result> implements 
       }
     }
   }
+  public void findBestIterationsFronts(Experiment<?, Result> experiment) throws IOException {
+	      for (TaggedAlgorithm<Result> algorithm : experiment.getAlgorithmList()) {
+	        String algorithmDirectory;
+	        algorithmDirectory = experiment.getExperimentBaseDirectory() + "/data/" +
+	            algorithm.getTag();
+
+	        for (Problem<?> problem :experiment.getProblemList()) {
+	          String indicatorFileName =
+	              algorithmDirectory + "/" + problem.getName() + "/ITER";
+	          Path indicatorFile = Paths.get(indicatorFileName) ;
+	          if (indicatorFile == null) {
+	            throw new JMetalException("Indicator file ITER doesn't exist") ;
+	          }
+	          FileWriter os = new FileWriter(indicatorFileName, true);
+	          List<String> fileArray = new ArrayList<String>(experiment.getIndependentRuns());
+	          for (int i = 0; i < experiment.getIndependentRuns(); i++) {
+//	        	  String cadena;
+//	              FileReader f = new FileReader(indicatorFileName+Integer.toString(i));
+//	              BufferedReader b = new BufferedReader(f);
+//	              while((cadena = b.readLine())!=null) {
+//	            	  fileArray.add(cadena);
+//	              }
+//	              b.close();
+	        	  fileArray.addAll(Files.readAllLines(Paths.get(indicatorFileName+Integer.toString(i)+".tsv"), StandardCharsets.UTF_8));
+	        	  try {
+	        		  os.write(fileArray.get(i)+"\n");
+	        	    } catch (IOException ex) {
+	        	      throw new JMetalException("Error writing indicator file" + ex) ;
+	        	    }
+	          }
+	          os.close();
+	          List<Pair<Double, Integer>> list = new ArrayList<>() ;
+
+
+	          for (int i = 0; i < fileArray.size(); i++) {
+	            Pair<Double, Integer> pair = new ImmutablePair<>(Double.parseDouble(fileArray.get(i)), i) ;
+	            list.add(pair) ;
+	          }
+
+	          Collections.sort(list, new Comparator<Pair<Double, Integer>>() {
+	            @Override
+	            public int compare(Pair<Double, Integer> pair1, Pair<Double, Integer> pair2) {
+	              if (Math.abs(pair1.getLeft()) > Math.abs(pair2.getLeft())){
+	                return 1;
+	              } else if (Math.abs(pair1.getLeft()) < Math.abs(pair2.getLeft())) {
+	                return -1;
+	              } else {
+	                return 0;
+	              }
+	            }
+	          });
+	          String bestFunFileName ;
+	          String bestVarFileName ;
+	          String medianFunFileName ;
+	          String medianVarFileName ;
+
+	          String outputDirectory = algorithmDirectory + "/" + problem.getName() ;
+
+	          bestFunFileName = outputDirectory + "/BEST_ITER_FUN.tsv" ;
+	          bestVarFileName = outputDirectory + "/BEST_ITER_VAR.tsv" ;
+	          medianFunFileName = outputDirectory + "/MEDIAN_ITER_FUN.tsv" ;
+	          medianVarFileName = outputDirectory + "/MEDIAN_ITER_VAR.tsv" ;
+	          //if (indicator.isTheLowerTheIndicatorValueTheBetter()) {// TRUE for ITER
+	            String bestFunFile = outputDirectory + "/" +
+	                experiment.getOutputParetoFrontFileName() + list.get(0).getRight() + ".tsv";
+	            String bestVarFile = outputDirectory + "/" +
+	                experiment.getOutputParetoSetFileName() + list.get(0).getRight() + ".tsv";
+
+	            Files.copy(Paths.get(bestFunFile), Paths.get(bestFunFileName), REPLACE_EXISTING) ;
+	            Files.copy(Paths.get(bestVarFile), Paths.get(bestVarFileName), REPLACE_EXISTING) ;
+
+	          int medianIndex = list.size() / 2 ;
+	          String medianFunFile = outputDirectory + "/" +
+	              experiment.getOutputParetoFrontFileName() + list.get(medianIndex).getRight() + ".tsv";
+	          String medianVarFile = outputDirectory + "/" +
+	              experiment.getOutputParetoSetFileName() + list.get(medianIndex).getRight() + ".tsv";
+
+	          Files.copy(Paths.get(medianFunFile), Paths.get(medianFunFileName), REPLACE_EXISTING) ;
+	          Files.copy(Paths.get(medianVarFile), Paths.get(medianVarFileName), REPLACE_EXISTING) ;
+	        }
+	      }
+	  }
+  
+  public void findBestEvalFronts(Experiment<?, Result> experiment) throws IOException {
+      for (TaggedAlgorithm<Result> algorithm : experiment.getAlgorithmList()) {
+        String algorithmDirectory;
+        algorithmDirectory = experiment.getExperimentBaseDirectory() + "/data/" +
+            algorithm.getTag();
+
+        for (Problem<?> problem :experiment.getProblemList()) {
+          String indicatorFileName =
+              algorithmDirectory + "/" + problem.getName() + "/EVAL";
+          Path indicatorFile = Paths.get(indicatorFileName) ;
+          if (indicatorFile == null) {
+            throw new JMetalException("Indicator file EVAL doesn't exist") ;
+          }
+          FileWriter os = new FileWriter(indicatorFileName, true);
+          List<String> fileArray = new ArrayList<String>(experiment.getIndependentRuns());
+          for (int i = 0; i < experiment.getIndependentRuns(); i++) {
+//        	  String cadena;
+//              FileReader f = new FileReader(indicatorFileName+Integer.toString(i));
+//              BufferedReader b = new BufferedReader(f);
+//              while((cadena = b.readLine())!=null) {
+//            	  fileArray.add(cadena);
+//              }
+//              b.close();
+        	  fileArray.addAll(Files.readAllLines(Paths.get(indicatorFileName+Integer.toString(i)+".tsv"), StandardCharsets.UTF_8));
+        	  try {
+        		  os.write(fileArray.get(i)+"\n");
+        	    } catch (IOException ex) {
+        	      throw new JMetalException("Error writing indicator file" + ex) ;
+        	    }
+          }
+          os.close();
+          List<Pair<Double, Integer>> list = new ArrayList<>() ;
+
+
+          for (int i = 0; i < fileArray.size(); i++) {
+            Pair<Double, Integer> pair = new ImmutablePair<>(Double.parseDouble(fileArray.get(i)), i) ;
+            list.add(pair) ;
+          }
+
+          Collections.sort(list, new Comparator<Pair<Double, Integer>>() {
+            @Override
+            public int compare(Pair<Double, Integer> pair1, Pair<Double, Integer> pair2) {
+              if (Math.abs(pair1.getLeft()) > Math.abs(pair2.getLeft())){
+                return 1;
+              } else if (Math.abs(pair1.getLeft()) < Math.abs(pair2.getLeft())) {
+                return -1;
+              } else {
+                return 0;
+              }
+            }
+          });
+          String bestFunFileName ;
+          String bestVarFileName ;
+          String medianFunFileName ;
+          String medianVarFileName ;
+
+          String outputDirectory = algorithmDirectory + "/" + problem.getName() ;
+
+          bestFunFileName = outputDirectory + "/BEST_EVAL_FUN.tsv" ;
+          bestVarFileName = outputDirectory + "/BEST_EVAL_VAR.tsv" ;
+          medianFunFileName = outputDirectory + "/MEDIAN_EVAL_FUN.tsv" ;
+          medianVarFileName = outputDirectory + "/MEDIAN_EVAL_VAR.tsv" ;
+          //if (indicator.isTheLowerTheIndicatorValueTheBetter()) {// TRUE for ITER
+            String bestFunFile = outputDirectory + "/" +
+                experiment.getOutputParetoFrontFileName() + list.get(0).getRight() + ".tsv";
+            String bestVarFile = outputDirectory + "/" +
+                experiment.getOutputParetoSetFileName() + list.get(0).getRight() + ".tsv";
+
+            Files.copy(Paths.get(bestFunFile), Paths.get(bestFunFileName), REPLACE_EXISTING) ;
+            Files.copy(Paths.get(bestVarFile), Paths.get(bestVarFileName), REPLACE_EXISTING) ;
+
+          int medianIndex = list.size() / 2 ;
+          String medianFunFile = outputDirectory + "/" +
+              experiment.getOutputParetoFrontFileName() + list.get(medianIndex).getRight() + ".tsv";
+          String medianVarFile = outputDirectory + "/" +
+              experiment.getOutputParetoSetFileName() + list.get(medianIndex).getRight() + ".tsv";
+
+          Files.copy(Paths.get(medianFunFile), Paths.get(medianFunFileName), REPLACE_EXISTING) ;
+          Files.copy(Paths.get(medianVarFile), Paths.get(medianVarFileName), REPLACE_EXISTING) ;
+        }
+      }
+  }
+  
+  	// Método para filtrar los puntos pertenecientes a la ROI 
+    // OJO: Está hecho para refPoint FEASIBLE
+  	@SuppressWarnings("unchecked")
+	public Front filterROI (Front front){
+  		List<S> allPoints = (List<S>) FrontUtils.convertFrontToSolutionList(front);
+  		List<Double> refPoint = experiment.getReferencePoint();
+  		List<S> roiPoints = new ArrayList<S>();
+  		for (int i=0; i < allPoints.size(); i++){ // FEASIBLE RP
+  			boolean isIntoROI = true;
+  			for (int j=0; j<allPoints.get(0).getNumberOfObjectives(); j++){
+  				if(allPoints.get(i).getObjective(j)>refPoint.get(j)){
+  					isIntoROI = false;
+  				}
+  			}
+  			if (isIntoROI){
+  				roiPoints.add(allPoints.get(i));
+  			}
+  		}
+  		if (roiPoints.size()==0){ // UNFEASIBLE RP
+  			for (int i=0; i < allPoints.size(); i++){
+  	  			boolean isIntoROI = true;
+  	  			for (int j=0; j<allPoints.get(0).getNumberOfObjectives(); j++){
+  	  				if(allPoints.get(i).getObjective(j)<refPoint.get(j)){
+  	  					isIntoROI = false;
+  	  				}
+  	  			}
+  	  			if (isIntoROI){
+  	  				roiPoints.add(allPoints.get(i));
+  	  			}
+  	  		}
+  		}
+  		
+  		return new ArrayFront(roiPoints);
+  	}
 }
 

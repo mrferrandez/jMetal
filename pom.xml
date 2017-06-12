@@ -286,4 +286,11 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+    <dependencies>
+    	<dependency>
+    		<groupId>org.ejml</groupId>
+    		<artifactId>all</artifactId>
+    		<version>0.30</version>
+    	</dependency>
+    </dependencies>
 </project>

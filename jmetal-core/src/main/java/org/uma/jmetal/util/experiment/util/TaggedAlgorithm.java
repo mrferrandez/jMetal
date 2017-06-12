@@ -58,6 +58,11 @@ public class TaggedAlgorithm<Result> implements Algorithm<Result> {
   public String getName() {
     return algorithm.getName();
   }
+  
+  @Override
+  public int getIterations() {
+    return algorithm.getIterations();
+  }
 
   @Override
   public String getDescription() {
@@ -82,5 +87,10 @@ public class TaggedAlgorithm<Result> implements Algorithm<Result> {
 
   public void setProblem(Problem<?> problem) {
     this.problem = problem ;
+  }
+  
+  @Override
+  public int getEvaluationsConsumed() {
+    return algorithm.getEvaluationsConsumed();
   }
 }

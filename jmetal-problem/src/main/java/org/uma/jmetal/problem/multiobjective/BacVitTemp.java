@@ -24,6 +24,7 @@ import java.util.List;
 public class BacVitTemp extends AbstractDoubleProblem {
 
 static String currentFolder = System.getProperty("user.dir");
+//static int eval = 0;
 
 /**
 * Constructor.
@@ -54,7 +55,7 @@ public void evaluate(DoubleSolution solution) {
 	for (int var = 0; var < xv.length; var++){
 		xv[var] = solution.getVariableValue(var);
 	}
-	
+	long initTime = System.currentTimeMillis();
 	// Calcular el punto en el que en realidad se esta evaluando
 	double[] coord=getcoord(xv);
 	for (int var = 1; var < xv.length; var++){
@@ -69,6 +70,9 @@ public void evaluate(DoubleSolution solution) {
 	double Bac = vectsol[0];
 	double Vit = vectsol[1];
 	double Tmax = vectsol[2];
+	
+	long estimatedTime = System.currentTimeMillis() - initTime;
+	System.out.println(estimatedTime); //"Total execution time: " + estimatedTime + "ms";
 
 	// First objective
 	f[0] = Bac;
@@ -151,6 +155,10 @@ public static String[][] tablepres(double[] xv) {
 
 public static double[] run(String[] xvt, String[][] x) {//double, 
 	
+//	eval++;
+//	int numModel = eval%2;
+//	String nameModel = "Model"+Integer.toString(numModel);
+	
 	Model model;
 	try {
 		model = ModelUtil.loadCopy("root", "Model");
@@ -158,7 +166,8 @@ public static double[] run(String[] xvt, String[][] x) {//double,
 		// TODO Auto-generated catch block
 		e.printStackTrace();
 		model = ModelUtil.create("Model");
-	}
+	}	
+	
 	
 	model.param().set("Trefrig", xvt[1]);
 	model.param().set("Tini", xvt[0]);

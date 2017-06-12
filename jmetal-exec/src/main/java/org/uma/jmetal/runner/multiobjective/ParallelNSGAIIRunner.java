@@ -64,16 +64,16 @@ public class ParallelNSGAIIRunner extends AbstractAlgorithmRunner {
     String referenceParetoFront = "" ;
 
     String problemName ;
-    if (args.length == 1) {
-      problemName = args[0];
-    } else if (args.length == 2) {
-      problemName = args[0] ;
-      referenceParetoFront = args[1] ;
-    } else {
-      problemName = "org.uma.jmetal.problem.multiobjective.zdt.ZDT1";
-      referenceParetoFront = "jmetal-problem/src/test/resources/pareto_fronts/ZDT1.pf" ;
-    }
-
+//    if (args.length == 1) {
+//      problemName = args[0];
+//    } else if (args.length == 2) {
+//      problemName = args[0] ;
+//      referenceParetoFront = args[1] ;
+//    } else {
+//      problemName = "org.uma.jmetal.problem.multiobjective.zdt.ZDT1";
+//      referenceParetoFront = "jmetal-problem/src/test/resources/pareto_fronts/ZDT1.pf" ;
+//    }
+    problemName ="org.uma.jmetal.problem.multiobjective.BacVitTemp";
     problem = (DoubleProblem) ProblemUtils.<DoubleSolution> loadProblem(problemName);
 
     double crossoverProbability = 0.9 ;
@@ -86,7 +86,7 @@ public class ParallelNSGAIIRunner extends AbstractAlgorithmRunner {
 
     selection = new BinaryTournamentSelection<DoubleSolution>();
 
-    SolutionListEvaluator<DoubleSolution> evaluator = new MultithreadedSolutionListEvaluator<DoubleSolution>(0, problem) ;
+    SolutionListEvaluator<DoubleSolution> evaluator = new MultithreadedSolutionListEvaluator<DoubleSolution>(4, problem) ;
 
     NSGAIIBuilder<DoubleSolution> builder = new NSGAIIBuilder<DoubleSolution>(problem, crossover, mutation)
         .setSelectionOperator(selection)

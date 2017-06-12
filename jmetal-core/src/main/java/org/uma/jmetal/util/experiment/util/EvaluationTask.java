@@ -13,13 +13,19 @@
 
 package org.uma.jmetal.util.experiment.util;
 
+import org.uma.jmetal.algorithm.impl.AbstractEvolutionaryAlgorithm;
 import org.uma.jmetal.solution.Solution;
+import org.uma.jmetal.util.JMetalException;
 import org.uma.jmetal.util.JMetalLogger;
 import org.uma.jmetal.util.experiment.Experiment;
+import org.uma.jmetal.util.fileoutput.FileOutputContext;
 import org.uma.jmetal.util.fileoutput.SolutionListOutput;
 import org.uma.jmetal.util.fileoutput.impl.DefaultFileOutputContext;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -61,6 +67,8 @@ class EvaluationTask<S extends Solution<?>, Result> implements Callable<Object> 
   public Integer call() throws Exception {
     String funFile = outputDirectoryName + "/FUN" + id + ".tsv" ;
     String varFile = outputDirectoryName + "/VAR" + id + ".tsv" ;
+    String iterFile = outputDirectoryName + "/ITER" + id + ".tsv" ;
+    String evalFile = outputDirectoryName + "/EVAL" + id + ".tsv" ;
     JMetalLogger.logger.info(
         " Running algorithm: " + algorithm.getTag() +
             ", problem: " + algorithm.getProblem().getName() +
@@ -70,6 +78,30 @@ class EvaluationTask<S extends Solution<?>, Result> implements Callable<Object> 
 
     algorithm.run();
     Result population = algorithm.getResult() ;
+    
+    int numTotalIter = algorithm.getIterations();
+    int numTotalEval = algorithm.getEvaluationsConsumed();
+    FileWriter os;
+    try {
+      os = new FileWriter(iterFile, true);
+      os.write(Integer.toString(numTotalIter));
+      os.close();
+    } catch (IOException ex) {
+      throw new JMetalException("Error writing indicator file" + ex) ;
+    }
+    FileWriter oseval;
+    try {
+      oseval = new FileWriter(evalFile, true);
+      oseval.write(Integer.toString(numTotalEval));
+      oseval.close();
+    } catch (IOException ex) {
+      throw new JMetalException("Error writing indicator file" + ex) ;
+    }
+    
+//    FileOutputContext iterFileContext = new DefaultFileOutputContext(iterFile);
+//    BufferedWriter bufferedWriter = iterFileContext.getFileWriter();
+//    bufferedWriter.write(numTotalIter);
+//    bufferedWriter.close();
 
     new SolutionListOutput((List<? extends S>) population)
         .setSeparator("\t")

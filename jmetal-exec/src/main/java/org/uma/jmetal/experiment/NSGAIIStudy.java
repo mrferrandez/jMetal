@@ -86,12 +86,16 @@ public class NSGAIIStudy  {
             .setNumberOfCores(8)
             .build();
 
+    long initTime = System.currentTimeMillis();
     new ExecuteAlgorithms<>(experiment).run();
+    long estimatedTime = System.currentTimeMillis() - initTime;
     new ComputeQualityIndicators<>(experiment).run() ;
     new GenerateLatexTablesWithStatistics(experiment).run() ;
     new GenerateWilcoxonTestTablesWithR<>(experiment).run() ;
     new GenerateFriedmanTestTables<>(experiment).run();
     new GenerateBoxplotsWithR<>(experiment).setRows(3).setColumns(3).run() ;
+    
+    System.out.println("Total execution time: " + estimatedTime + "ms");
   }
 
   /**

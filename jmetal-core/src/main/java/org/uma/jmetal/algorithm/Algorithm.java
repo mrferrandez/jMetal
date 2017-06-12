@@ -26,4 +26,11 @@ import java.io.Serializable;
 public interface Algorithm<Result> extends Runnable, Serializable, DescribedEntity {
   void run() ;
   Result getResult() ;
+//  int getIterations();
+  default int getIterations(){
+	  return 0;
+  }
+  default int getEvaluationsConsumed(){
+	  return 0;
+  }
 }

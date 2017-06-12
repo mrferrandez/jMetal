@@ -66,13 +66,13 @@ public class NDSASSWASFGARunner extends AbstractAlgorithmRunner {
 //      referenceParetoFront = "jmetal-problem/src/test/resources/pareto_fronts/ZDT4.pf" ;
 //    }
 
-    problemName ="org.uma.jmetal.problem.multiobjective.BacVit";
+    problemName ="org.uma.jmetal.problem.multiobjective.BacVitTemp";
     problem = ProblemUtils.<DoubleSolution> loadProblem(problemName);
     
     referencePoint = new ArrayList<>();
     referencePoint.add(0.0);
     referencePoint.add(0.0);
-    //referencePoint.add(30.0);
+    referencePoint.add(30.0);
     
     int improvementRounds = 7;
     SASSLocalSearch<DoubleSolution> localSearch = new SASSLocalSearch<DoubleSolution>(improvementRounds, problem);
@@ -87,7 +87,7 @@ public class NDSASSWASFGARunner extends AbstractAlgorithmRunner {
 
     selection = new BinaryTournamentSelection<DoubleSolution>(new RankingAndCrowdingDistanceComparator<DoubleSolution>());
 
-    algorithm = new NDSASSWASFGA<DoubleSolution>(problem, 30, 10, localSearch, crossover, mutation, selection,new SequentialSolutionListEvaluator<DoubleSolution>(),referencePoint) ;
+    algorithm = new NDSASSWASFGA<DoubleSolution>(problem, 200, 33, localSearch, crossover, mutation, selection,new SequentialSolutionListEvaluator<DoubleSolution>(),referencePoint) ;
 
     AlgorithmRunner algorithmRunner = new AlgorithmRunner.Executor(algorithm)
             .execute() ;

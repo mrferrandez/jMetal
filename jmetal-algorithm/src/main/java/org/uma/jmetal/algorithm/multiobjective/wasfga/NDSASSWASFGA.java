@@ -49,17 +49,18 @@ import java.util.List;
  *         Juana L. Redondo
  *         
  */
-public class NDSASSWASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
+public class NDSASSWASFGA<S extends Solution<?>> extends WASFGA<S> {
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 1L;
-	protected int maxEvaluations;
-	protected int evaluations;
-	protected Normalizer normalizer;
+//  Quitamos todo lo que hereda de WASFGA
+//	private static final long serialVersionUID = 1L;
+//	protected int maxEvaluations;
+//	protected int evaluations;
+//	protected Normalizer normalizer;
 	
-	final ASFWASFGA<S> achievementScalarizingFunction;
-	List<Double> referencePoint = null;
+//	final ASFWASFGA<S> achievementScalarizingFunction;
+//	List<Double> referencePoint = null;
 	
 	//private NonDominatedSolutionListArchive<S> externalList;
 	//private int numberOfNonComparableSolutions ;
@@ -87,10 +88,10 @@ public class NDSASSWASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 								SolutionListEvaluator<S> evaluator,
 								List<Double> referencePoint) {
 
-		super(problem,maxIterations,crossoverOperator,mutationOperator,selectionOperator,evaluator);
-		setMaxPopulationSize(populationSize);
-		this.referencePoint 				= referencePoint;
-		this.achievementScalarizingFunction =  createUtilityFunction();
+		super(problem,populationSize,maxIterations,crossoverOperator,mutationOperator,selectionOperator,evaluator,referencePoint);
+		//setMaxPopulationSize();
+		//this.referencePoint 				= referencePoint;
+		//this.achievementScalarizingFunction =  createUtilityFunction();
 		//externalList = new NonDominatedSolutionListArchive<S>();
 		//numberOfNonComparableSolutions = 0 ;
 		distance = new EuclideanDistanceBetweenSolutionsInObjectiveSpace<S>() ;
@@ -125,13 +126,13 @@ public class NDSASSWASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 		updateReferencePoint(this.getPopulation());
 		localSearch.getExternalList().initializeRemovedSolutions();
 		this.evaluations += this.getPopulationSize();
-		System.out.println("Number of evaluations: "+ this.evaluations);
-		System.out.println("External List Size: "+ localSearch.getExternalList().size());
-		new SolutionListOutput(this.getPopulation())
-	    .setSeparator("\t")
-	    .setVarFileOutputContext(new DefaultFileOutputContext("VAR_POP"+Integer.toString(iterations)+".tsv"))
-	    .setFunFileOutputContext(new DefaultFileOutputContext("FUN_POP"+Integer.toString(iterations)+".tsv"))
-	    .print();
+//		System.out.println("Number of evaluations: "+ this.evaluations);
+//		System.out.println("External List Size: "+ localSearch.getExternalList().size());
+//		new SolutionListOutput(this.getPopulation())
+//	    .setSeparator("\t")
+//	    .setVarFileOutputContext(new DefaultFileOutputContext("VAR_POP"+Integer.toString(iterations)+".tsv"))
+//	    .setFunFileOutputContext(new DefaultFileOutputContext("FUN_POP"+Integer.toString(iterations)+".tsv"))
+//	    .print();
 		double value = 0.0;
 		double maxval= 0.0;
 		for (int i=0; i < this.getMaxPopulationSize(); i++){
@@ -184,24 +185,24 @@ public class NDSASSWASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
         		dominatedPopulation.add(population.get(i));
     		}
 		}
-		System.out.println("Number of dominated solutions: "+ dominatedPopulation.size());
+//		System.out.println("Number of dominated solutions: "+ dominatedPopulation.size());
 		dominatedPopulation.addAll(localSearch.getExternalList().getRemovedSolutions());
 		
 		if (dominatedPopulation.size()>0){
 			improvedPopulation = improveWithSASS(dominatedPopulation);
 			jointPopulation.addAll(improvedPopulation);
 		}
-		System.out.println("External List Size before fitting: "+ localSearch.getExternalList().size());
+//		System.out.println("External List Size before fitting: "+ localSearch.getExternalList().size());
 		fitExternalList();
 		
-		new SolutionListOutput( localSearch.getExternalList().getSolutionList())
-	    .setSeparator("\t")
-	    .setVarFileOutputContext(new DefaultFileOutputContext("VAR_EL"+Integer.toString(iterations)+".tsv"))
-	    .setFunFileOutputContext(new DefaultFileOutputContext("FUN_EL"+Integer.toString(iterations)+".tsv"))
-	    .print();
+//		new SolutionListOutput( localSearch.getExternalList().getSolutionList())
+//	    .setSeparator("\t")
+//	    .setVarFileOutputContext(new DefaultFileOutputContext("VAR_EL"+Integer.toString(iterations)+".tsv"))
+//	    .setFunFileOutputContext(new DefaultFileOutputContext("FUN_EL"+Integer.toString(iterations)+".tsv"))
+//	    .print();
 		
 		jointPopulation.addAll(localSearch.getExternalList().getSolutionList());
-		System.out.println("SASSexternalListPopulationSize After Fitting= "+ localSearch.getExternalList().size());
+//		System.out.println("SASSexternalListPopulationSize After Fitting= "+ localSearch.getExternalList().size());
 		
 		Ranking<S> ranking = computeRanking(jointPopulation);
 
@@ -224,11 +225,11 @@ public class NDSASSWASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 //	}
 	
 	protected List<S> improveWithSASS(List<S> dominatedPopulation) {
-		new SolutionListOutput(dominatedPopulation)
-	    .setSeparator("\t")
-	    .setVarFileOutputContext(new DefaultFileOutputContext("VAR_DOM"+Integer.toString(iterations)+".tsv"))
-	    .setFunFileOutputContext(new DefaultFileOutputContext("FUN_DOM"+Integer.toString(iterations)+".tsv"))
-	    .print();
+//		new SolutionListOutput(dominatedPopulation)
+//	    .setSeparator("\t")
+//	    .setVarFileOutputContext(new DefaultFileOutputContext("VAR_DOM"+Integer.toString(iterations)+".tsv"))
+//	    .setFunFileOutputContext(new DefaultFileOutputContext("FUN_DOM"+Integer.toString(iterations)+".tsv"))
+//	    .print();
 		List<S> improvedPopulation = new ArrayList<>(dominatedPopulation.size());
 		double rad;
 		for (int i = 0; i < dominatedPopulation.size(); i++) {
@@ -245,7 +246,7 @@ public class NDSASSWASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 			}
 			rad=distDomain.getNormalizedDistance((DoubleSolution)individual, (DoubleSolution) this.getPopulation().get(index));
 			localSearch.setRadius(rad);
-			System.out.println("RADIUS: " + rad);
+//			System.out.println("RADIUS: " + rad);
 			improvedPopulation.add(localSearch.execute(individual));
 			this.evaluations += localSearch.getEvaluations();
 		}
@@ -258,13 +259,13 @@ public class NDSASSWASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 	    //.setVarFileOutputContext(new DefaultFileOutputContext("VAR"+Integer.toString(iterations)+".tsv"))
 	    //.setFunFileOutputContext(new DefaultFileOutputContext("FUN"+Integer.toString(iterations)+".tsv"))
 	    //.print();
-		System.out.println("Number of improved solutions: "+ improvedPopulation.size());
-
-		new SolutionListOutput(improvedPopulation)
-	    .setSeparator("\t")
-	    .setVarFileOutputContext(new DefaultFileOutputContext("VAR_IMPR"+Integer.toString(iterations)+".tsv"))
-	    .setFunFileOutputContext(new DefaultFileOutputContext("FUN_IMPR"+Integer.toString(iterations)+".tsv"))
-	    .print();
+//		System.out.println("Number of improved solutions: "+ improvedPopulation.size());
+//
+//		new SolutionListOutput(improvedPopulation)
+//	    .setSeparator("\t")
+//	    .setVarFileOutputContext(new DefaultFileOutputContext("VAR_IMPR"+Integer.toString(iterations)+".tsv"))
+//	    .setFunFileOutputContext(new DefaultFileOutputContext("FUN_IMPR"+Integer.toString(iterations)+".tsv"))
+//	    .print();
 		
 		return improvedPopulation;
 	}
@@ -295,11 +296,11 @@ public class NDSASSWASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 	}
 	
 	protected List<S> improveDominatedSolutions(List<S> dominatedPopulation) {
-		new SolutionListOutput(dominatedPopulation)
-	    .setSeparator("\t")
-	    .setVarFileOutputContext(new DefaultFileOutputContext("VAR_DOM"+Integer.toString(iterations)+".tsv"))
-	    .setFunFileOutputContext(new DefaultFileOutputContext("FUN_DOM"+Integer.toString(iterations)+".tsv"))
-	    .print();
+//		new SolutionListOutput(dominatedPopulation)
+//	    .setSeparator("\t")
+//	    .setVarFileOutputContext(new DefaultFileOutputContext("VAR_DOM"+Integer.toString(iterations)+".tsv"))
+//	    .setFunFileOutputContext(new DefaultFileOutputContext("FUN_DOM"+Integer.toString(iterations)+".tsv"))
+//	    .print();
 //		boolean isnotdominated;
 		List<S> improvedPopulation = new ArrayList<>();
 		for (int i=0; i < dominatedPopulation.size(); i++){
@@ -315,13 +316,14 @@ public class NDSASSWASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 //				dominatedPopulation.add(improvedPopulation.get(i));
 //			}
 //		}
-		System.out.println("Number of improved solutions: "+ improvedPopulation.size());
-
-		new SolutionListOutput(improvedPopulation)
-	    .setSeparator("\t")
-	    .setVarFileOutputContext(new DefaultFileOutputContext("VAR_IMPR"+Integer.toString(iterations)+".tsv"))
-	    .setFunFileOutputContext(new DefaultFileOutputContext("FUN_IMPR"+Integer.toString(iterations)+".tsv"))
-	    .print();
+		
+//		System.out.println("Number of improved solutions: "+ improvedPopulation.size());
+//
+//		new SolutionListOutput(improvedPopulation)
+//	    .setSeparator("\t")
+//	    .setVarFileOutputContext(new DefaultFileOutputContext("VAR_IMPR"+Integer.toString(iterations)+".tsv"))
+//	    .setFunFileOutputContext(new DefaultFileOutputContext("FUN_IMPR"+Integer.toString(iterations)+".tsv"))
+//	    .print();
 		return improvedPopulation;
 	}
 	
@@ -398,10 +400,10 @@ public class NDSASSWASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 	}
 
 	@Override public String getName() {
-		return "NDWASFGA" ;
+		return "NDSASSWASFGA" ;
 	}
 
 	@Override public String getDescription() {
-		return "Non Dominated Weighting Achievement Scalarizing Function Genetic Algorithm" ;
+		return "Non Dominated with SASS Weighting Achievement Scalarizing Function Genetic Algorithm" ;
 	}
 }

@@ -108,7 +108,7 @@ public class SASSLocalSearch<S extends Solution<?>> implements LocalSearchOperat
 		double gaussrnd, lowerBound, upperBound; //, ynorm, ydesnorm;
 
 		while ((ic < rounds)&&(fcnt < Maxfcnt)) {
-			System.out.println("SASS Iteration: "+ic);
+//			System.out.println("SASS Iteration: "+ic);
 			if (scnt > Scnt){
 				sigma = ex*sigma;
 				////System.out.println(scnt+" mayor que "+Scnt);
@@ -220,7 +220,7 @@ public class SASSLocalSearch<S extends Solution<?>> implements LocalSearchOperat
 			}
 			ic ++;
 			//yold = (DoubleSolution) ynew.copy();
-			System.out.println("Salgo de la ite");
+//			System.out.println("Salgo de la ite");
 		}
 			return (S) yold.copy();
 		}
