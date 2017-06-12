@@ -7,6 +7,8 @@ import org.uma.jmetal.operator.SelectionOperator;
 import org.uma.jmetal.problem.Problem;
 import org.uma.jmetal.solution.Solution;
 import org.uma.jmetal.util.evaluator.SolutionListEvaluator;
+import org.uma.jmetal.util.fileoutput.SolutionListOutput;
+import org.uma.jmetal.util.fileoutput.impl.DefaultFileOutputContext;
 import org.uma.jmetal.util.pseudorandom.JMetalRandom;
 
 import java.util.ArrayList;
@@ -136,6 +138,13 @@ public abstract class AbstractMOMBI<S extends Solution<?>> extends AbstractGenet
 			offspringPopulation = reproduction(matingPopulation);
 			offspringPopulation = evaluatePopulation(offspringPopulation);
 			this.setPopulation(replacement(this.getPopulation(), offspringPopulation));
+			if (iterations%5==0){
+				new SolutionListOutput(this.getPopulation())
+			    .setSeparator("\t")
+			    .setVarFileOutputContext(new DefaultFileOutputContext("VAR_ITER" + Integer.toString(iterations) + ".tsv"))
+			    .setFunFileOutputContext(new DefaultFileOutputContext("FUN_ITER" + Integer.toString(iterations) + ".tsv"))
+			    .print();
+			}
 			updateProgress();
 			// specific GA needed computations
 			this.specificMOEAComputations();
@@ -151,6 +160,16 @@ public abstract class AbstractMOMBI<S extends Solution<?>> extends AbstractGenet
 	public List<Double> getNadirPoint() {
 		return this.nadirPoint;
 	}
+	
+	public List<Double> getReferencePoint(List<S> solutionList) {
+		this.updateReferencePoint(solutionList);
+		return this.referencePoint;
+	}
+
+	public List<Double> getNadirPoint(List<S> solutionList) {
+		this.updateNadirPoint(solutionList);
+		return this.nadirPoint;
+	}
 
 	private void initializeReferencePoint(int size) {
 		for (int i = 0; i < size; i++)
@@ -160,6 +179,11 @@ public abstract class AbstractMOMBI<S extends Solution<?>> extends AbstractGenet
 	private void initializeNadirPoint(int size) {
 		for (int i = 0; i < size; i++)
 			this.getNadirPoint().add(Double.NEGATIVE_INFINITY);
+	}
+	
+	public void initializeBounds(int size) {
+		this.initializeNadirPoint(size);
+		this.initializeReferencePoint(size);
 	}
 
 	protected void updateReferencePoint(S s) {

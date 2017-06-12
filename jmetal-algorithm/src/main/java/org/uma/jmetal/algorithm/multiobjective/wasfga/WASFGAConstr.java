@@ -4,7 +4,7 @@ import org.uma.jmetal.algorithm.multiobjective.mombi.AbstractMOMBI;
 import org.uma.jmetal.algorithm.multiobjective.mombi.util.ASFWASFGA;
 import org.uma.jmetal.algorithm.multiobjective.mombi.util.AbstractUtilityFunctionsSet;
 import org.uma.jmetal.algorithm.multiobjective.mombi.util.Normalizer;
-import org.uma.jmetal.algorithm.multiobjective.wasfga.util.WASFGARanking;
+import org.uma.jmetal.algorithm.multiobjective.wasfga.util.WASFGARankingConstr;
 import org.uma.jmetal.algorithm.multiobjective.wasfga.util.WeightVector;
 import org.uma.jmetal.operator.CrossoverOperator;
 import org.uma.jmetal.operator.MutationOperator;
@@ -30,7 +30,7 @@ import java.util.List;
  *         Issue 1, pp 101-129
  *         DOI = {10.1007/s10898-014-0214-y}
  */
-public class WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
+public class WASFGAConstr<S extends Solution<?>> extends AbstractMOMBI<S> {
 	/**
 	 *
 	 */
@@ -48,7 +48,7 @@ public class WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 	 * @param problem
 	 *            Problem to solve
 	 */
-	public WASFGA(Problem<S> problem,
+	public WASFGAConstr(Problem<S> problem,
 								int populationSize,
 								int maxIterations,
 								CrossoverOperator<S> crossoverOperator,
@@ -100,7 +100,7 @@ public class WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 	protected Ranking<S> computeRanking(List<S> solutionList) {
 		this.achievementScalarizingFunction.setNadir(getNadirPoint(solutionList));
 		this.achievementScalarizingFunction.setUtopia(getReferencePoint(solutionList));
-		Ranking<S> ranking = new WASFGARanking<>(this.achievementScalarizingFunction);
+		Ranking<S> ranking = new WASFGARankingConstr<>(this.achievementScalarizingFunction);
 		ranking.computeRanking(solutionList);
 		return ranking;
 	}

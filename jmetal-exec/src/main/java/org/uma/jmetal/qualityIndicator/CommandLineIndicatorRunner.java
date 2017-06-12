@@ -16,6 +16,7 @@ package org.uma.jmetal.qualityIndicator;
 import org.uma.jmetal.qualityindicator.QualityIndicator;
 import org.uma.jmetal.qualityindicator.impl.*;
 import org.uma.jmetal.qualityindicator.impl.hypervolume.PISAHypervolume;
+import org.uma.jmetal.qualityindicator.impl.hypervolume.WFGHypervolume;
 import org.uma.jmetal.util.JMetalException;
 import org.uma.jmetal.util.JMetalLogger;
 import org.uma.jmetal.util.front.Front;
@@ -91,7 +92,9 @@ public class CommandLineIndicatorRunner {
         + "IGD+ - Inverted generational distance plus \n" + "HV   - Hypervolume \n"
         + "ER   - Error ratio \n" + "SPREAD  - Spread (two objectives)\n"
         + "GSPREAD - Generalized Spread (more than two objectives)\n" + "ER   - Error ratio\n"
-        //+ "R2   - R2\n\n" + "ALL  - prints all the available indicators \n\n"
+        //+ "R2   - R2\n\n" 
+        + "AD - Average Distance \n" + "TS - Spacing indicator \n"
+        + "ALL  - prints all the available indicators \n\n"
         + "Normalize can be TRUE or FALSE (the fronts are normalized before computing"
         + " the indicators) \n") ;
   }
@@ -108,8 +111,9 @@ public class CommandLineIndicatorRunner {
     Front front = new ArrayFront(args[2]);
 
     if (normalize) {
-      referenceFront = new FrontNormalizer(referenceFront).normalize(referenceFront) ;
       front = new FrontNormalizer(referenceFront).normalize(front) ;
+      referenceFront = new FrontNormalizer(referenceFront).normalize(referenceFront) ;
+      
       JMetalLogger.logger.info("The fronts are NORMALIZED before computing the indicators"); ;
     } else {
       JMetalLogger.logger.info("The fronts are NOT NORMALIZED before computing the indicators") ;
@@ -156,6 +160,8 @@ public class CommandLineIndicatorRunner {
     list.add(new GeneralizedSpread<PointSolution>(referenceFront)) ;
     //list.add(new R2<List<DoubleSolution>>(referenceFront)) ;
     list.add(new ErrorRatio<List<PointSolution>>(referenceFront)) ;
+    list.add(new AverageDistance<PointSolution>(referenceFront)) ;
+    list.add(new Spacing<PointSolution>(referenceFront)) ;
 
     return list ;
   }

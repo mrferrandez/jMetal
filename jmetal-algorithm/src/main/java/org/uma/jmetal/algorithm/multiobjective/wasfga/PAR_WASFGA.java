@@ -30,7 +30,7 @@ import java.util.List;
  *         Issue 1, pp 101-129
  *         DOI = {10.1007/s10898-014-0214-y}
  */
-public class WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
+public class PAR_WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 	/**
 	 *
 	 */
@@ -41,6 +41,8 @@ public class WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 	
 	final ASFWASFGA<S> achievementScalarizingFunction;
 	List<Double> referencePoint = null;
+	
+	protected double [][] weights;
 
 	/**
 	 * Constructor
@@ -48,7 +50,7 @@ public class WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 	 * @param problem
 	 *            Problem to solve
 	 */
-	public WASFGA(Problem<S> problem,
+	public PAR_WASFGA(Problem<S> problem,
 								int populationSize,
 								int maxIterations,
 								CrossoverOperator<S> crossoverOperator,
@@ -73,7 +75,7 @@ public class WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 		}
 		weights = WeightVector.invertWeights(weights,true);
 		ASFWASFGA<S> aux = new ASFWASFGA<>(weights,referencePoint);
-
+		this.weights = weights;
 		return aux;
 	}
 
@@ -93,8 +95,100 @@ public class WASFGA<S extends Solution<?>> extends AbstractMOMBI<S> {
 		List<S> jointPopulation = new ArrayList<>();
 		jointPopulation.addAll(population);
 		jointPopulation.addAll(offspringPopulation);
-		Ranking<S> ranking = computeRanking(jointPopulation);
-		return selectBest(ranking);
+		List<S> ROIPopulation = new ArrayList<>();
+		ROIPopulation = computeROI(jointPopulation);
+		List<S> resultPopulation = new ArrayList<>();
+		if (ROIPopulation.size() > this.getMaxPopulationSize()){
+			Ranking<S> ranking = computeRanking(ROIPopulation);
+			resultPopulation = selectBest(ranking);
+		}
+		else
+			resultPopulation = ROIPopulation;
+		
+		return resultPopulation;
+	}
+	
+	protected List<S> computeROI(List<S> population) {
+		int m = population.get(0).getNumberOfObjectives();
+		double[] max = new double[m];
+//		initializeBounds(this.getProblem().getNumberOfObjectives());
+//		updateNadirPoint(jointPopulation);
+//		updateReferencePoint(jointPopulation);
+		this.achievementScalarizingFunction.setNadir(getNadirPoint(population));
+		this.achievementScalarizingFunction.setUtopia(getReferencePoint(population));
+		double ASFmin = Double.MAX_VALUE;
+	    for (int i =0; i < population.size(); i++){
+	    	for (int weight=0; weight < achievementScalarizingFunction.getVectorSize(); weight++){
+	    		double ASFvalue = achievementScalarizingFunction.evaluate(population.get(i),weight);
+	    		if(ASFvalue < ASFmin){
+	    			ASFmin = ASFvalue;
+	    		}
+	    	}
+	    }
+	    System.out.println("Smin "+ ASFmin);
+	     
+	    for (int nobj=0; nobj < m; nobj++){
+	    	List<Double> refPointAux = new ArrayList<>();
+	    	for (int ei=0; ei < m; ei++){
+	    		refPointAux.add(referencePoint.get(ei));
+	    	}
+	    	refPointAux.set(nobj, referencePoint.get(nobj)+(this.getNadirPoint().get(nobj)-this.getReferencePoint().get(nobj))*ASFmin);
+	    	ASFWASFGA<S> auxASFunction = new ASFWASFGA<>(this.weights,refPointAux);
+	    	auxASFunction.setNadir(getNadirPoint(population));
+	    	auxASFunction.setUtopia(getReferencePoint(population));
+	    	double auxASFmin = Double.MAX_VALUE;//auxASFunction.evaluate(population.get(0),0);
+	        int indexMin = 0;
+	        for (int i =0; i < population.size(); i++){
+	        	for (int weight=0; weight < achievementScalarizingFunction.getVectorSize(); weight++){
+	        		double auxASFvalue = auxASFunction.evaluate(population.get(i),weight);
+	        		if(auxASFvalue < auxASFmin){
+	        			auxASFmin = auxASFvalue;
+	        			indexMin = i;
+	        		}
+	        	}
+	        }
+	        max[nobj] = population.get(indexMin).getObjective(nobj);
+	        System.out.println("ZauxREF "+ refPointAux.get(0)+" "+ refPointAux.get(1)+" "+ refPointAux.get(2));
+	        System.out.println(max[nobj]);
+	    }
+	    
+	    List<S> ROIPopulation = new ArrayList<>();
+	    List<S> noROIPopulation = new ArrayList<>();
+	    double aux;
+	    for (int i =0; i < population.size(); i++){
+	    	boolean isIntoROI = true;
+	    	for (int nobj=0; nobj < m; nobj++){
+	    		aux = population.get(i).getObjective(nobj);
+	    		if (aux > max[nobj]){
+	    			isIntoROI = false;
+	    		}
+	    	}
+	    	if (isIntoROI){
+	    		ROIPopulation.add(population.get(i));
+//	    		jointPopulation.remove(jointPopulation.get(i));
+	    	}else
+	    		noROIPopulation.add(population.get(i));
+	    }
+	    System.out.println("Número de individuos en ROI");
+	    System.out.println(ROIPopulation.size());
+	    
+	    while (ROIPopulation.size() < this.getMaxPopulationSize()){
+	    	ASFmin = Double.MAX_VALUE;
+	    	int indexMin = 0;
+	    	for (int i =1; i < noROIPopulation.size(); i++){
+	    		for (int weight=0; weight < achievementScalarizingFunction.getVectorSize(); weight++){
+	    			double ASFvalue = achievementScalarizingFunction.evaluate(noROIPopulation.get(i),weight);
+	    			if(ASFvalue < ASFmin){
+	    				ASFmin = ASFvalue;
+	    				indexMin = i;
+	    			}
+	    		}
+	    	}
+	    	ROIPopulation.add(noROIPopulation.get(indexMin));
+	    	noROIPopulation.remove(noROIPopulation.get(indexMin));
+	    }
+	    
+		return ROIPopulation;
 	}
 	
 	protected Ranking<S> computeRanking(List<S> solutionList) {
